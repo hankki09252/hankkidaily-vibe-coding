@@ -15,6 +15,14 @@ type Entry = {
   oneThingDone: boolean;
   successList: { text: string; done: boolean }[];
   gratitude: string;
+  bodyCondition: string;
+  painAreas: string[];
+  painLevel: number;
+  movementPain: boolean;
+  painNote: string;
+  mistake: string;
+  lesson: string;
+  nextAction: string;
 };
 
 const routineItems = ["충분한 수분 섭취", "10분 스트레칭", "이미지 트레이닝", "훈련 후 쿨다운"];
@@ -24,6 +32,7 @@ const moods = [
   { icon: "≈", label: "복잡해요" },
   { icon: "☁", label: "지쳤어요" },
 ];
+const painAreaOptions = ["어깨", "팔꿈치", "손목·손", "허리", "무릎", "발목·발", "기타"];
 const quotes = [
   ["찰나의 간결한 볼 터치는 하루아침에 이뤄지지 않는다.", "손웅정 감독"],
   ["아직 일은 끝나지 않았다.", "코비 브라이언트"],
@@ -57,6 +66,14 @@ export default function TrainingJournal() {
   const [oneThingDone, setOneThingDone] = useState(false);
   const [successList, setSuccessList] = useState([{ text: "", done: false }, { text: "", done: false }, { text: "", done: false }]);
   const [gratitude, setGratitude] = useState("");
+  const [bodyCondition, setBodyCondition] = useState("좋아요");
+  const [painAreas, setPainAreas] = useState<string[]>([]);
+  const [painLevel, setPainLevel] = useState(0);
+  const [movementPain, setMovementPain] = useState(false);
+  const [painNote, setPainNote] = useState("");
+  const [mistake, setMistake] = useState("");
+  const [lesson, setLesson] = useState("");
+  const [nextAction, setNextAction] = useState("");
 
   useEffect(() => {
     try {
@@ -69,6 +86,9 @@ export default function TrainingJournal() {
         setOneThing(today.oneThing || ""); setOneThingDone(today.oneThingDone || false);
         setSuccessList(today.successList?.length ? today.successList : [{ text: "", done: false }, { text: "", done: false }, { text: "", done: false }]);
         setGratitude(today.gratitude || "");
+        setBodyCondition(today.bodyCondition || "좋아요"); setPainAreas(today.painAreas || []);
+        setPainLevel(today.painLevel || 0); setMovementPain(today.movementPain || false); setPainNote(today.painNote || "");
+        setMistake(today.mistake || ""); setLesson(today.lesson || ""); setNextAction(today.nextAction || "");
       }
     } catch { /* A fresh journal is okay. */ }
     setReady(true);
@@ -87,9 +107,10 @@ export default function TrainingJournal() {
 
   const quote = quotes[new Date().getDate() % quotes.length];
   const toggleRoutine = (item: string) => setRoutines((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item]);
+  const togglePainArea = (item: string) => setPainAreas((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item]);
 
   const saveEntry = () => {
-    const entry: Entry = { id: todayKey(), date: todayKey(), energy, mood, routines, training, learned, selfTalk, oneThing, oneThingDone, successList, gratitude };
+    const entry: Entry = { id: todayKey(), date: todayKey(), energy, mood, routines, training, learned, selfTalk, oneThing, oneThingDone, successList, gratitude, bodyCondition, painAreas, painLevel, movementPain, painNote, mistake, lesson, nextAction };
     const next = [entry, ...entries.filter((item) => item.date !== entry.date)].sort((a, b) => b.date.localeCompare(a.date));
     setEntries(next);
     localStorage.setItem("today-nine-entries", JSON.stringify(next));
@@ -132,6 +153,16 @@ export default function TrainingJournal() {
                   {moods.map((item) => <button key={item.label} type="button" className={mood === item.label ? "selected" : ""} onClick={() => setMood(item.label)}><span>{item.icon}</span>{item.label}</button>)}
                 </div></fieldset>
               </div>
+              <div className="body-check">
+                <div className="body-check-title"><div><h3>오늘 몸에 불편하거나 아픈 곳이 있나요?</h3><p>선수에게 몸 상태를 정확히 아는 것은 훈련의 시작이에요. 숨기지 말고 있는 그대로 체크해요.</p></div><div className="condition-buttons">{["좋아요", "조금 불편해요", "통증이 있어요"].map((item) => <button type="button" key={item} className={bodyCondition === item ? "selected" : ""} onClick={() => setBodyCondition(item)}>{item}</button>)}</div></div>
+                <div className="pain-areas" aria-label="통증 부위">{painAreaOptions.map((item) => <button type="button" key={item} className={painAreas.includes(item) ? "selected" : ""} onClick={() => togglePainArea(item)}>{painAreas.includes(item) ? "✓ " : "+ "}{item}</button>)}</div>
+                <div className="pain-detail">
+                  <label htmlFor="pain-level">통증 강도 <b>{painLevel}</b><span>/ 10</span><input id="pain-level" type="range" min="0" max="10" value={painLevel} onChange={(e) => setPainLevel(Number(e.target.value))} /></label>
+                  <label className={movementPain ? "movement-check checked" : "movement-check"}><input type="checkbox" checked={movementPain} onChange={(e) => setMovementPain(e.target.checked)} /><span>✓</span> 움직일 때 통증이 더 느껴져요</label>
+                </div>
+                <textarea className="pain-note" value={painNote} onChange={(e) => setPainNote(e.target.value)} placeholder="언제부터, 어떤 동작에서, 어느 정도 불편했는지 적어보세요." />
+                {(painLevel >= 4 || movementPain || bodyCondition === "통증이 있어요") && <div className="safety-note"><b>오늘은 몸의 신호를 먼저 지켜요.</b><span>통증을 참고 훈련하지 말고 보호자·코치·트레이너에게 알려주세요. 머리를 부딪친 뒤 증상이 있거나 심한 통증이 있다면 운동을 멈추고 의료진의 확인을 받아야 해요.</span></div>}
+              </div>
             </section>
 
             <section className="card focus-card">
@@ -169,6 +200,16 @@ export default function TrainingJournal() {
               <label className="gratitude-field">오늘 감사한 점<textarea value={gratitude} onChange={(e) => setGratitude(e.target.value)} placeholder="아주 작은 것도 좋아요. 오늘 내 곁에 있었던 사람, 기회, 몸의 변화에 감사해 보세요." /></label>
             </section>
 
+            <section className="card lesson-card">
+              <div className="section-heading"><span className="step">06</span><div><h2>실수를 성장으로 바꾸기</h2><p>실수를 탓하는 대신, 알아차린 것과 다음 행동을 남겨요.</p></div></div>
+              <label>오늘 내가 실수를 깨달았던 순간<textarea value={mistake} onChange={(e) => setMistake(e.target.value)} placeholder="무슨 일이 있었고, 그때 내가 놓친 것은 무엇이었나요?" /></label>
+              <div className="lesson-grid">
+                <label>힘들게 깨우친 교훈 한 가지<textarea value={lesson} onChange={(e) => setLesson(e.target.value)} placeholder="이 경험이 내게 가르쳐 준 한 문장을 적어보세요." /></label>
+                <label>다음 플레이에서 바꿀 행동<textarea value={nextAction} onChange={(e) => setNextAction(e.target.value)} placeholder="다음에는 무엇을 다르게 해볼까요? 작고 구체적으로 적어보세요." /></label>
+              </div>
+              <p className="lesson-note">실수를 정확히 보는 것은 약점이 아니라, 같은 실수를 줄이는 선수의 능력이에요.</p>
+            </section>
+
             <button className="save-button" onClick={saveEntry}>{saved ? "오늘의 기록을 잘 간직했어요 ✓" : "오늘의 기록 저장하기"}</button>
             <p className="save-note">기록은 이 기기에 안전하게 저장돼요.</p>
           </section>
@@ -191,7 +232,16 @@ export default function TrainingJournal() {
 
 function Records({ entries, ready, onGoToday }: { entries: Entry[]; ready: boolean; onGoToday: () => void }) {
   return <section className="subpage"><div className="eyebrow">MY RECORDS</div><h1>쌓여가는 나의 기록</h1><p className="intro">잘한 날도 힘든 날도 모두 내 야구의 한 페이지예요.</p>
-    {!ready || entries.length === 0 ? <Empty onGoToday={onGoToday} /> : <div className="record-list">{entries.map((entry) => <article className="record-card" key={entry.id}><div className="record-date"><b>{prettyDate(entry.date)}</b><span>에너지 {entry.energy}/10 · {entry.mood}</span></div>{entry.oneThing && <div className={entry.oneThingDone ? "record-focus complete" : "record-focus"}><span>{entry.oneThingDone ? "완료" : "집중"}</span><b>{entry.oneThing}</b></div>}<p>{entry.training || "훈련 내용은 비워두었어요."}</p>{entry.successList?.some((item) => item.text) && <ol className="record-success">{entry.successList.filter((item) => item.text).map((item, index) => <li className={item.done ? "done" : ""} key={index}>{item.done ? "✓" : "○"} {item.text}</li>)}</ol>}{entry.learned && <blockquote>“{entry.learned}”</blockquote>}{entry.gratitude && <p className="record-gratitude">감사 · {entry.gratitude}</p>}<div className="tags">{entry.routines.map((item) => <span key={item}>{item}</span>)}</div></article>)}</div>}
+    {!ready || entries.length === 0 ? <Empty onGoToday={onGoToday} /> : <div className="record-list">{entries.map((entry) => <article className="record-card" key={entry.id}>
+      <div className="record-date"><b>{prettyDate(entry.date)}</b><span>에너지 {entry.energy}/10 · {entry.mood}</span></div>
+      {(entry.bodyCondition || entry.painAreas?.length) && <div className="record-body"><b>몸 상태 · {entry.bodyCondition || "체크 안 함"}</b><span>{entry.painAreas?.length ? `${entry.painAreas.join(", ")} · 통증 ${entry.painLevel || 0}/10` : "통증 부위 없음"}</span></div>}
+      {entry.oneThing && <div className={entry.oneThingDone ? "record-focus complete" : "record-focus"}><span>{entry.oneThingDone ? "완료" : "집중"}</span><b>{entry.oneThing}</b></div>}
+      <p>{entry.training || "훈련 내용은 비워두었어요."}</p>
+      {entry.successList?.some((item) => item.text) && <ol className="record-success">{entry.successList.filter((item) => item.text).map((item, index) => <li className={item.done ? "done" : ""} key={index}>{item.done ? "✓" : "○"} {item.text}</li>)}</ol>}
+      {entry.mistake && <div className="record-lesson"><span>깨달은 실수</span><p>{entry.mistake}</p>{entry.lesson && <b>교훈 · {entry.lesson}</b>}{entry.nextAction && <small>다음 행동 · {entry.nextAction}</small>}</div>}
+      {entry.learned && <blockquote>“{entry.learned}”</blockquote>}{entry.gratitude && <p className="record-gratitude">감사 · {entry.gratitude}</p>}
+      <div className="tags">{entry.routines.map((item) => <span key={item}>{item}</span>)}</div>
+    </article>)}</div>}
   </section>;
 }
 
