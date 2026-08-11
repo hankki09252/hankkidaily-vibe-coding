@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     images: [{ url: "/og.png", width: 1536, height: 1024, alt: "오늘의 9회 야구 성장 일지" }],
   },
   twitter: { card: "summary_large_image", images: ["/og.png"] },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "오늘의 9회", statusBarStyle: "black-translucent" },
+  icons: { apple: "/icon-192.png" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

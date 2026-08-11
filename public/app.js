@@ -78,3 +78,26 @@ function bind(){
 }
 document.querySelectorAll(".topbar [data-tab]").forEach(button=>button.onclick=()=>render(button.dataset.tab));
 render();
+
+let installPrompt;
+const installButton = document.querySelector("#install-app");
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+if (isStandalone) installButton.hidden = true;
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  installPrompt = event;
+  installButton.classList.add("ready");
+});
+installButton.addEventListener("click", async () => {
+  if (installPrompt) {
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = undefined;
+    return;
+  }
+  if (isIos) alert("Safari 아래쪽의 공유 버튼을 누른 뒤 ‘홈 화면에 추가’와 ‘웹 앱으로 열기’를 선택하세요.");
+  else alert("브라우저 메뉴에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요.");
+});
+window.addEventListener("appinstalled", () => { installButton.hidden = true; });
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker.js"));
