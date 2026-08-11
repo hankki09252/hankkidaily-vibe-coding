@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>오늘의 9회 | 야구 성장 기록</title>
+  <meta name="description" content="훈련과 마음을 함께 기록하는 아마야구 선수의 데일리 루틴 앱" />
+  <meta property="og:title" content="오늘의 9회" />
+  <meta property="og:description" content="훈련과 마음을 함께 기록하는 야구 성장 일지" />
+  <meta property="og:image" content="/og.png" />
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-tab="today" aria-label="오늘의 9회 홈"><span class="brand-mark">9</span><span><b>오늘의 9회</b><small>MY BASEBALL JOURNAL</small></span></button>
+      <nav aria-label="주요 메뉴"><button class="active" data-tab="today">오늘</button><button data-tab="records">나의 기록</button><button data-tab="growth">성장 노트</button></nav>
+      <div class="streak"><span>●</span><b id="streak">0</b>일 연속</div>
+    </header>
+    <div id="app"></div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
