@@ -1,0 +1,26 @@
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const API=window.BUMI_API_URL||'';
+const NAMES=['한끼방패','필사마','고마워디자이너','뽀글아줌마','오기글빛','오늘도맑음','마틸다의꿈','선경지명','레하놋','박윤정'];
+const tokenKey='bumichalToken';
+let state={member:null,mission:null,house:null,windows:[]};
+function apiReady(){return API&&API.startsWith('https://script.google.com/')}
+async function post(action,data={}){if(!apiReady())throw new Error('backend_not_connected');const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...data})});return r.json()}
+async function get(action,params={}){if(!apiReady())throw new Error('backend_not_connected');const u=new URL(API);u.searchParams.set('action',action);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u);return r.json()}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1900)}
+function showLogin(msg=''){const box=$('#login');box.classList.add('on');$('#appShell').classList.remove('on');$('#loginMsg').textContent=msg}
+function showApp(){ $('#login').classList.remove('on');$('#appShell').classList.add('on') }
+function renderLogin(){const s=$('#loginName');s.innerHTML='<option value="">멤버 선택</option>'+NAMES.map(n=>`<option>${n}</option>`).join('')}
+function houseLevel(total){return total>=1000?['LEVEL 5','9기 완성 정원']:total>=900?['LEVEL 4','꽃이 피는 집']:total>=700?['LEVEL 3','별이 켜지는 집']:total>=400?['LEVEL 2','나무가 자라는 집']:['LEVEL 1','첫 불빛']}
+function render(){if(!state.member)return;$('#meName').textContent=state.member.name;$('#hello').textContent=state.member.name+'님, 오늘도 집에 작은 빛 하나를 보태볼까요?';const m=state.mission||{};$('#missionText').textContent=m.mission_text||'오늘의 미션을 불러오는 중이에요.';$('#completeBtn').disabled=!!state.completed;$('#completeBtn').textContent=state.completed?'오늘의 창문 불이 켜졌어요 ✦':'완료하고 내 창문 켜기';$('#rerollBtn').style.display=state.completed?'none':'inline-flex';$('#rerollBtn').disabled=!state.rerollLeft;$('#rerollBtn').textContent=state.rerollLeft?'한 번 더 뽑기':'오늘 다시뽑기 사용완료';const h=state.house||{total:846,level:3};$('#houseCount').textContent=h.total+'개';const lv=houseLevel(h.total);$('#houseLevel').textContent=lv[0]+' · '+lv[1];const next=h.total<900?900:h.total<1000?1000:null;$('#houseNext').textContent=next?'다음 변화까지 '+(next-h.total)+'개':'9기의 정원이 완성됐어요 ✦';$('#houseBar').style.width=Math.min(100,h.total/10)+'%';renderWindows()}
+function renderWindows(){const root=$('#windows');root.innerHTML=(state.windows||[]).map(w=>`<button class="window-member ${w.lit?'lit':''} ${state.member&&w.id===state.member.id?'mine':''}"><span>${w.lit?'✨':'○'}</span><b>${w.name}</b><small>${w.id===state.member.id?'내 창문':w.lit?'오늘 불 켜짐':'아직 조용함'}</small></button>`).join('');const lit=(state.windows||[]).filter(x=>x.lit).length;$('#litCount').textContent=lit+' / '+(state.windows||[]).length+'개의 불빛'}
+async function bootstrap(){const token=localStorage.getItem(tokenKey);if(!token)return showLogin();try{const d=await get('bootstrap',{token});if(!d.ok)throw new Error(d.error||'bootstrap_failed');state={...state,...d,member:d.member,mission:d.mission,house:d.house,windows:d.windows||[]};showApp();render()}catch(e){localStorage.removeItem(tokenKey);showLogin('로그인이 만료됐어요. 다시 로그인해주세요.') }}
+async function login(){const name=$('#loginName').value,code=$('#loginCode').value.trim();if(!name||!code)return $('#loginMsg').textContent='이름과 참여코드를 입력해주세요.';$('#loginBtn').disabled=true;try{const d=await post('login',{name,code});if(!d.ok)throw new Error(d.error||'login_failed');localStorage.setItem(tokenKey,d.token);await bootstrap()}catch(e){$('#loginMsg').textContent=e.message==='backend_not_connected'?'Google 연결 주소가 아직 설정되지 않았어요.':'이름 또는 참여코드가 맞지 않아요.'}finally{$('#loginBtn').disabled=false}}
+async function reroll(){try{const d=await post('reroll',{token:localStorage.getItem(tokenKey)});if(!d.ok)throw new Error(d.error);state.mission=d.mission;state.rerollLeft=d.rerollLeft||0;render();toast('🎲 오늘의 미션을 한 번 다시 뽑았어요.')}catch(e){toast('미션을 다시 뽑지 못했어요.')}}
+async function complete(){try{$('#completeBtn').disabled=true;const d=await post('completeMission',{token:localStorage.getItem(tokenKey)});if(!d.ok)throw new Error(d.error);state.completed=true;state.house=d.house;state.windows=d.windows||state.windows;render();toast(d.already?'오늘의 불빛은 이미 켜져 있어요.':'✨ 내 창문이 켜졌어요! 9기의 집에 +1')}catch(e){$('#completeBtn').disabled=false;toast('완료 저장에 실패했어요.')}}
+async function mood(btn){const temp=btn.dataset.temp,m=btn.dataset.mood;$$('.moodBtn').forEach(b=>b.classList.toggle('on',b===btn));try{await post('mood',{token:localStorage.getItem(tokenKey),temperature:temp,mood:m});toast('🌡️ 오늘 마음을 기록했어요.')}catch(e){toast('마음 기록 저장에 실패했어요.')}}
+function logout(){localStorage.removeItem(tokenKey);state={member:null,mission:null,house:null,windows:[]};showLogin('로그아웃했어요.')}
+function init(){renderLogin();$('#loginBtn').onclick=login;$('#loginCode').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#rerollBtn').onclick=reroll;$('#completeBtn').onclick=complete;$('#logoutBtn').onclick=logout;$$('.moodBtn').forEach(b=>b.onclick=()=>mood(b));bootstrap()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
