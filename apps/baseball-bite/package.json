@@ -1,15 +1,15 @@
 {
   "name": "baseball-bite",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5173",
     "web:build": "vite build",
-    "build": "ait build"
+    "build": "vite build && ait build"
   },
   "dependencies": {
-    "@apps-in-toss/web-framework": "2.4.1"
+    "@apps-in-toss/web-framework": "3.4.0"
   },
   "devDependencies": {
     "vite": "^7.1.5"
