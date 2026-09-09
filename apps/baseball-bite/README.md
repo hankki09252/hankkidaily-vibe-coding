@@ -13,8 +13,9 @@
 ## 앱인토스 설정
 - appName: `baseball-bite`
 - displayName: `야구한입`
-- type: `partner` (비게임)
-- SDK: `@apps-in-toss/web-framework@2.4.1`
+- 비게임 WebView 미니앱
+- SDK: `@apps-in-toss/web-framework@3.4.0`
+- 설정 파일: `apps-in-toss.config.ts`
 
 ## 로컬 웹 미리보기
 ```bash
@@ -28,3 +29,5 @@ npm install
 npm run build
 ```
 프로젝트 루트에 `.ait` 번들이 생성됩니다.
+
+> 이 프로젝트는 신규 앱이라 SDK 2.x의 기존 localStorage 데이터 이전 이슈가 없습니다. 출시 전 콘솔 QR 테스트는 한 번 확인해 주세요.
