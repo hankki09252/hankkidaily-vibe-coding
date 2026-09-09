@@ -1,0 +1,31 @@
+name: Build Baseball Bite AIT
+on:
+  push:
+    branches: [baseball-bite]
+    paths:
+      - 'apps/baseball-bite/**'
+      - '.github/workflows/baseball-bite-build.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/baseball-bite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Build web preview
+        run: npm run web:build
+      - name: Build Apps in Toss bundle
+        run: npm run build
+      - name: Upload AIT artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseball-bite-ait
+          path: apps/baseball-bite/*.ait
+          if-no-files-found: error
